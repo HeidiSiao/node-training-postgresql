@@ -30,30 +30,6 @@ router.post("/signup", async (req, res, next) => {
       throw customErr(400, "failed", message);
     }
 
-    // 驗證使用者姓名規則
-    // if (!isValidUserName(name)) {
-    //   logger.warn(
-    //     "建立使用者錯誤: 姓名不符合規則，不可包含任何特殊符號與空白，最少2個字，最多10個字"
-    //   );
-    //   throw customErr(
-    //     400,
-    //     "failed",
-    //     "姓名不符合規則，不可包含任何特殊符號與空白，最少2個字，最多10個字"
-    //   );
-    // }
-    // 驗證密碼規則
-    //  if (!isValidPassword(password)) {
-    //   // 紀錄一條警告信息
-    //   logger.warn(
-    //     "建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
-    //   );
-    //   throw customErr(
-    //     400,
-    //     "failed",
-    //     "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
-    //   );
-    // }
-
     // email是否與查詢資料庫結果重複
     const userRepo = dataSource.getRepository("User");
     const userRecord = await userRepo.findOne({
@@ -91,3 +67,39 @@ router.post("/signup", async (req, res, next) => {
 });
 
 module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // 驗證使用者姓名規則
+    // if (!isValidUserName(name)) {
+    //   logger.warn(
+    //     "建立使用者錯誤: 姓名不符合規則，不可包含任何特殊符號與空白，最少2個字，最多10個字"
+    //   );
+    //   throw customErr(
+    //     400,
+    //     "failed",
+    //     "姓名不符合規則，不可包含任何特殊符號與空白，最少2個字，最多10個字"
+    //   );
+    // }
+    // 驗證密碼規則
+    //  if (!isValidPassword(password)) {
+    //   // 紀錄一條警告信息
+    //   logger.warn(
+    //     "建立使用者錯誤: 密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
+    //   );
+    //   throw customErr(
+    //     400,
+    //     "failed",
+    //     "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
+    //   );
+    // }
