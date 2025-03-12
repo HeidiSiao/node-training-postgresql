@@ -19,7 +19,7 @@ router.get("/", async (req, res, next) => {
     // req.query 取得的值本來就是字串，確認是否為數字
     if (invalidMsg) {
       logger.warn(invalidMsg);
-      throw customErr(400, "failed", `${invalidMsg}`);
+      throw customErr(400,`${invalidMsg}`);
     }
     // 將 per 和 page 轉換為正整數
     per = parseInt(per);
@@ -60,7 +60,7 @@ router.get("/:coachId", async(req,res,next) => {
     // 確認是否為有效ID格式
     if(!isUUID(coachId)){
       logger.warn("欄位未填寫正確:ID錯誤");
-      throw customErr(400, "failed", "欄位未填寫正確:ID錯誤");
+      throw customErr(400, "欄位未填寫正確:ID錯誤");
     };
 
     // 查找coach表是否有此教練ID，findOneBy 支援單一物件條件
@@ -73,7 +73,7 @@ router.get("/:coachId", async(req,res,next) => {
     });
     if(!coachRecord) {
       logger.warn("找不到該教練");
-      throw customErr(404, "failed", "找不到該教練");
+      throw customErr(404,"找不到該教練");
     }
     const { name, role } = coachRecord.User;
 

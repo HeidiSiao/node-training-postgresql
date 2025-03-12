@@ -34,7 +34,6 @@ router.post("/", async (req, res, next) => {
 
       throw customErr(
         400,
-        "failed",
         `欄位未填寫正確: ${invalidMsg.join(", ")}`
       );
     }
@@ -44,7 +43,7 @@ router.post("/", async (req, res, next) => {
       where: { name },
     });
     if (packageRecord) {
-      throw customErr(409, "failed", "資料重複");
+      throw customErr(409, "資料重複","conflict");
     }
 
     const newPackage = creditPackageRepo.create({
@@ -66,7 +65,7 @@ router.delete("/:creditPackageId", async (req, res, next) => {
 
     // 查找資料庫前，先確認是否為有效的 UUID 格式
     if (!isUUID(creditPackageId)) {
-      throw customErr(400, "failed", "ID錯誤");
+      throw customErr(400,"ID錯誤");
     }
 
     // 檢查資料庫是否確實刪除資料
@@ -75,7 +74,7 @@ router.delete("/:creditPackageId", async (req, res, next) => {
       .delete(creditPackageId);
 
     if (deleteCount.affected === 0) {
-      throw customErr(404, "failed", "ID不存在");
+      throw customErr(404, "ID不存在");
     }
     correctRes(res, creditPackageId);
   } catch (error) {

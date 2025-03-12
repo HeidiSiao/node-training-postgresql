@@ -18,13 +18,6 @@ const { customErr, correctRes } = require("../utils/resHandle");
 // 注意此路由要放上面，否則無法進入該路徑
 router.post("/coaches/courses", async (req, res, next) => {
   try {
-    /* 正則表達式
-    function isValidDate(dateStr) {
-      const regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;  // 用正則表達式匹配 'YYYY-MM-DD HH:mm:ss' 格式
-      return regex.test(dateStr); // 如果符合格式返回 true，否則返回 false
-    } */
-    // 可以做檢查日期格式 套件 moment "YYYY-MM-DD HH:mm:ss"
-
     const data = req.body;
     const {
       user_id: userId,
@@ -41,20 +34,20 @@ router.post("/coaches/courses", async (req, res, next) => {
     const isValidCheck = courseFieldCheck(data);
     if (isValidCheck) {
       logger.warn(isValidCheck);
-      throw customErr(400, "failed", `${isValidCheck}`);
+      throw customErr(400,`${isValidCheck}`);
     }
 
     // (日期)未來如果會擴增檢核的日期欄位種類，才用物件包和解構
     const result = isValidDate(startAt, endAt);
     if (!result.isValid) {
       logger.warn("日期格式錯誤");
-      throw customErr(400, "failed", `${result.message}`);
+      throw customErr(400,`${result.message}`);
     }
     // (網址填寫正確) 非必填欄位檢查：meeting_url
     const isUrlCorrect = meetingUrlCheck(meetingUrl);
     if (!isUrlCorrect) {
       logger.warn("欄位未填寫正確");
-      throw customErr(400, "failed", "meeting_url網址無效");
+      throw customErr(400,"meeting_url網址無效");
     }
     // (檢查使用者ID)是否存在，查找user表、並指定返回欄位
     const userRepo = dataSource.getRepository("User");
@@ -64,10 +57,10 @@ router.post("/coaches/courses", async (req, res, next) => {
     });
     if (!userRecord) {
       logger.warn("使用者不存在");
-      throw customErr(400, "failed", "使用者不存在");
+      throw customErr(400, "使用者不存在");
     } else if (userRecord.role !== "COACH") {
       logger.warn("使用者沒有權限操作");
-      throw customErr(403, "failed", "使用者尚未成為教練，沒有權限操作");
+      throw customErr(403,"使用者尚未成為教練，沒有權限訪問","forbidden");
     }
     // 檢查回傳的資料欄位是否重複，在同時間已存在課程
     const courseRepo = dataSource.getRepository("Course");
@@ -79,7 +72,7 @@ router.post("/coaches/courses", async (req, res, next) => {
     });
     if (courseRecord) {
       logger.warn("課程資料重疊");
-      throw customErr(409, "failed", "開課時間已重疊");
+      throw customErr(409,"開課時間已重疊","conflict");
     }
 
     // 建立新課程
@@ -128,21 +121,21 @@ router.put("/coaches/courses/:courseId", async (req, res, next) => {
     const isValidCheck = courseEditFieldCheck(data);
     if (isValidCheck) {
       logger.warn(isValidCheck);
-      throw customErr(400, "failed", `${isValidCheck}`);
+      throw customErr(400,`${isValidCheck}`);
     }
 
     // 日期驗證
     const result = isValidDate(startAt, endAt);
     if (!result.isValid) {
       logger.warn("日期格式錯誤");
-      throw customErr(400, "failed", `${result.message}`);
+      throw customErr(400,`${result.message}`);
     }
 
     //非必填驗證：會議網址
     const isUrlCorrect = meetingUrlCheck(meetingUrl);
     if (!isUrlCorrect) {
       logger.warn("欄位未填寫正確");
-      throw customErr(400, "failed", "meeting_url網址無效");
+      throw customErr(400, "meeting_url網址無效");
     }
 
     // 查詢課程Id是否存在
@@ -154,7 +147,7 @@ router.put("/coaches/courses/:courseId", async (req, res, next) => {
     });
     if (!courseRecord) {
       logger.warn("課程不存在");
-      throw customErr(404, "failed", "查無此課程");
+      throw customErr(404,"查無此課程");
     }
 
     // 課程是否更新成功
@@ -166,7 +159,7 @@ router.put("/coaches/courses/:courseId", async (req, res, next) => {
         skill_id: skillId,
         name,
         description,
-        startAt,
+        start_at: startAt,
         end_at: endAt,
         max_participants: maxParticipants,
         meeting_url: meetingUrl,
@@ -174,7 +167,7 @@ router.put("/coaches/courses/:courseId", async (req, res, next) => {
     );
     if (updateCourse.affected === 0) {
       logger.warn("更新課程失敗");
-      throw customErr(404, "failed", "更新課程失敗");
+      throw customErr(404, "更新課程失敗");
     }
     //  更新完後只會回傳更新的訊息，需要再把更新的結果撈出來
     const courseResult = await courseRepo.findOne({
@@ -204,21 +197,21 @@ router.post("/coaches/:userId", async (req, res, next) => {
     // 先確認 userId 是否為有效的 UUID 格式
     if (!isUUID(userId)) {
       logger.warn("欄位未填寫正確");
-      throw customErr(400, "failed", "使用者ID為無效格式");
+      throw customErr(400,"使用者ID為無效格式");
     }
 
     // 檢查必填欄位格式是否正確
     const invalidMsg = coachFieldCheck(data);
     if (invalidMsg.length > 0) {
       logger.warn("欄位未填寫正確");
-      throw customErr(400, "failed", `欄位未填寫正確：${invalidMsg}`);
+      throw customErr(400,`欄位未填寫正確：${invalidMsg}`);
     }
 
     // 檢查「非必填」欄位：照片網址檔案格式
     const isUrlCorrect = imgUrlCheck(profile_image_url);
     if (!isUrlCorrect) {
       logger.warn("欄位未填寫正確");
-      throw customErr(400, "failed", "照片網址無效");
+      throw customErr(400,"照片網址無效");
     }
 
     // 檢查的是該 userId 是否在 User 表中存在
@@ -233,10 +226,10 @@ router.post("/coaches/:userId", async (req, res, next) => {
     });
     if (!userRecord) {
       logger.warn("使用者不存在");
-      throw customErr(400, "failed", "使用者不存在");
+      throw customErr(400,"使用者不存在");
     } else if (userRecord.role === "COACH") {
       logger.warn("使用者已經是教練");
-      throw customErr(409, "failed", "使用者已經是教練");
+      throw customErr(409,"使用者已經是教練","conflict");
     }
 
     const updatedUser = await userRepo.update(
@@ -251,7 +244,7 @@ router.post("/coaches/:userId", async (req, res, next) => {
     );
     if (updatedUser.affected === 0) {
       logger.warn("更新使用者失敗");
-      throw customErr(400, "failed", "更新使用者失敗");
+      throw customErr(400, "更新使用者失敗");
     }
 
     const coachRepo = dataSource.getRepository("Coach");

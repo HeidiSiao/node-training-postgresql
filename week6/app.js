@@ -36,17 +36,21 @@ app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/coaches", coachesRouter);
 
+// Express 會自動結束請求，所以不用return 
+app.use((req, res, next)=>{
+  res.status(404).json({
+    status: "error",
+    message:"無此路由"
+  })
+});
+
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   req.log.error(err);
-
   const statusCode = err.statusCode || 500;
-  const status = err.status || "error";
-  const message = err.message || "伺服器發生錯誤";
-
   res.status(statusCode).json({
-    status,
-    message,
+    status: err.status || (statusCode === 500 ? "error" : "failed"),
+    message: err.message || "伺服器發生錯誤"
   });
 });
 

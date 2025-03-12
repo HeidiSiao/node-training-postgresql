@@ -19,7 +19,7 @@ router.post("/signup", async (req, res, next) => {
     const invalidMsg = userFieldCheck(data);
     if (invalidMsg.length > 0) {
       logger.warn("必填欄位未填寫正確");
-      throw customErr(400, "failed", `欄位未填寫正確: ${invalidMsg}`);
+      throw customErr(400,`欄位未填寫正確: ${invalidMsg}`);
     }
 
     // 驗證規則與欄位內容是否相符
@@ -27,7 +27,7 @@ router.post("/signup", async (req, res, next) => {
     if (userInfoValidResult.length > 0) {
       const message = userInfoValidResult.join(" | ");
       logger.warn(message);
-      throw customErr(400, "failed", message);
+      throw customErr(400, message);
     }
 
     // email是否與查詢資料庫結果重複
@@ -37,7 +37,7 @@ router.post("/signup", async (req, res, next) => {
     });
     if (userRecord) {
       logger.warn("建立使用者錯誤: Email 已被使用");
-      throw customErr(409, "failed", "Email已被使用");
+      throw customErr(409, "Email已被使用","conflict");
     }
 
     // 確認通過所有檢驗，建立新使用者資訊並儲存在資料庫
