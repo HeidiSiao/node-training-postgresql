@@ -166,7 +166,7 @@ router.put("/coaches/courses/:courseId", async (req, res, next) => {
         skill_id: skillId,
         name,
         description,
-        startAt,
+        startAt: startAt,
         end_at: endAt,
         max_participants: maxParticipants,
         meeting_url: meetingUrl,
