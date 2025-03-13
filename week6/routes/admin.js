@@ -14,9 +14,10 @@ const {
   meetingUrlCheck,
 } = require("../utils/validUtils");
 const { customErr, correctRes } = require("../utils/resHandle");
+const isAuth = require("../middlewares/isAuth")
 
 // 注意此路由要放上面，否則無法進入該路徑
-router.post("/coaches/courses", async (req, res, next) => {
+router.post("/coaches/courses", isAuth, async (req, res, next) => {
   try {
     const data = req.body;
     const {
@@ -103,7 +104,7 @@ router.post("/coaches/courses", async (req, res, next) => {
   }
 });
 
-router.put("/coaches/courses/:courseId", async (req, res, next) => {
+router.put("/coaches/courses/:courseId", isAuth, async (req, res, next) => {
   try {
     const { courseId } = req.params;
     const data = req.body;

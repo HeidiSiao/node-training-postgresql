@@ -4,8 +4,9 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const { dataSource } = require("../db/data-source");
 const logger = require("../utils/logger")("User");
-const { userFieldCheck, userInfoRuleCheck } = require("../utils/validUtils");
+const { userFieldCheck, userInfoRuleCheck, loginFieldCheck, pwdRuleCheck} = require("../utils/validUtils");
 const { customErr, correctRes } = require("../utils/resHandle");
+const { generateJWT } = require("../utils/jwtService");
 
 const saltRounds = 10;
 
@@ -32,9 +33,7 @@ router.post("/signup", async (req, res, next) => {
 
     // email是否與查詢資料庫結果重複
     const userRepo = dataSource.getRepository("User");
-    const userRecord = await userRepo.findOne({
-      where: { email },
-    });
+    const userRecord = await userRepo.findOneBy({ email });
     if (userRecord) {
       logger.warn("建立使用者錯誤: Email 已被使用");
       throw customErr(409, "Email已被使用","conflict");
@@ -66,7 +65,69 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
+router.post("/login", async (req, res, next ) => {
+  try {
+    const { email, password } = req.body;
+    const invalidMsg = loginFieldCheck(email, password);
+
+    // 必填欄位驗證
+    if (invalidMsg.length > 0) {
+      logger.warn("必填欄位未填寫正確");
+      throw customErr(400, `必填欄位未填寫正確：${invalidMsg}`);
+    }
+    // 密碼欄位規則驗證
+    const isValidPwd = pwdRuleCheck(password);
+    if (isValidPwd) {
+      logger.warn(isValidPwd);
+      throw customErr(400, `必填欄位未填寫正確：${isValidPwd}`);
+    };
+
+    // 先檢查email是否存在，撈出指定欄位
+    const userRepo = dataSource.getRepository('User');
+    const userRecord = await userRepo.findOne({
+      select:['id','name','password'],
+      where: { email }
+    });
+
+    if (!userRecord) {
+      logger.warn("使用者不存在");
+      throw customErr(404, "使用者不存在");
+    };
+
+    // 再驗證密碼，bcrypt.compare()
+    const isMatch = await bcrypt.compare(password, userRecord.password);
+    if(!isMatch){
+      logger.warn("密碼輸入錯誤");
+      throw customErr(401, "密碼輸入錯誤","Unauthorized");
+    }
+    
+    // 登入成功，回傳JWT token給使用者
+    const token = generateJWT({
+      id: userRecord.id,
+      role: userRecord.role
+    });
+
+    const dataRes = {
+      token: token,
+      user: {
+        name: userRecord.name
+      } 
+    };
+
+    correctRes(res, dataRes, 201);
+
+  } catch (error) {
+    logger.error(error);
+    next(error);
+  }
+})
+
+
+
 module.exports = router;
+
+
+
 
 
 

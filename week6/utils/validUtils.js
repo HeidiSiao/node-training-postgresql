@@ -15,6 +15,7 @@ const isNotInputNumber = (value) =>
 // 日期檢驗：moment.js 已deprecated
 const dayjs = require("dayjs");
 const customFormat = require("dayjs/plugin/customParseFormat");
+const { password } = require("../config/db");
 // 加載插件，開啟額外功能
 dayjs.extend(customFormat);
 const isValidDate = (startAt, endAt) => {
@@ -79,7 +80,7 @@ const userFieldCheck = (data) => {
 // 封裝驗證規則：使用者姓名、密碼
 const userInfoRuleCheck = (name, password) => {
   const userInfoErrors = [];
-  const userPattern = /^[a-zA-Z0-9]{2,10}$/;
+  const userPattern = /^[a-zA-Z0-9\u4e00-\u9fff]{2,10}$/;
   const passwordPattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}/;
 
   if (!userPattern.test(name)) {
@@ -207,6 +208,31 @@ const coachesQueryCheck = (per, page) => {
   return null;
 };
 
+
+// login必填欄位驗證
+const loginFieldCheck = (email, password) => {
+  const loginFieldErr = [];
+  const userEmailInvalid = isUndefined(email) || isNotValidString(email);
+  const userPwdInvalid = isUndefined(password) || isNotValidString(password);
+  if (userEmailInvalid) {
+    loginFieldErr.push("Email 不可為空或格式錯誤");
+  };
+  if (userPwdInvalid) {
+    loginFieldErr.push("Password 不可為空或格式錯誤");
+  };
+  return loginFieldErr;
+};
+
+// 密碼規則驗證
+const pwdRuleCheck = (password) => {
+  const pwdPattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}/;
+    if (!pwdPattern.test(password)) {
+      return "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
+    }
+    return null;
+}
+
+
 module.exports = {
   packageFieldsCheck,
   skillFieldsCheck,
@@ -219,4 +245,6 @@ module.exports = {
   courseEditFieldCheck,
   meetingUrlCheck,
   coachesQueryCheck,
+  loginFieldCheck,
+  pwdRuleCheck
 };
