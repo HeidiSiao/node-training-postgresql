@@ -77,27 +77,6 @@ const userFieldCheck = (data) => {
   return userFieldErrors;
 };
 
-// 封裝驗證規則：使用者姓名、密碼
-const userInfoRuleCheck = (name, password) => {
-  const userInfoErrors = [];
-  const userPattern = /^[a-zA-Z0-9\u4e00-\u9fff]{2,10}$/;
-  const passwordPattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}/;
-
-  if (!userPattern.test(name)) {
-    userInfoErrors.push(
-      "姓名不符合規則，不可包含任何特殊符號與空白，最少2個字，最多10個字"
-    );
-  }
-
-  if (!passwordPattern.test(password)) {
-    userInfoErrors.push(
-      "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
-    );
-  }
-
-  return userInfoErrors;
-};
-
 // 檢查必填欄位：陣列呈現錯誤欄位訊息
 const coachFieldCheck = (data) => {
   const error = [];
@@ -208,7 +187,6 @@ const coachesQueryCheck = (per, page) => {
   return null;
 };
 
-
 // login必填欄位驗證
 const loginFieldCheck = (email, password) => {
   const loginFieldErr = [];
@@ -223,21 +201,29 @@ const loginFieldCheck = (email, password) => {
   return loginFieldErr;
 };
 
-// 密碼規則驗證
+// Password 規則驗證
 const pwdRuleCheck = (password) => {
   const pwdPattern = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}/;
     if (!pwdPattern.test(password)) {
       return "密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字"
     }
     return null;
-}
+};
+
+// Name 規則驗證
+const nameRuleCheck = (name) => {
+  const userPattern = /^[a-zA-Z0-9\u4e00-\u9fff]{2,10}$/;
+  if (!userPattern.test(name)) {
+    return "姓名不符合規則，不可包含任何特殊符號與空白，最少2個字，最多10個字"
+  }
+  return null;
+};
 
 
 module.exports = {
   packageFieldsCheck,
   skillFieldsCheck,
   userFieldCheck,
-  userInfoRuleCheck,
   coachFieldCheck,
   imgUrlCheck,
   isValidDate,
@@ -246,5 +232,6 @@ module.exports = {
   meetingUrlCheck,
   coachesQueryCheck,
   loginFieldCheck,
-  pwdRuleCheck
+  pwdRuleCheck,
+  nameRuleCheck
 };

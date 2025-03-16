@@ -3,6 +3,7 @@ const { customErr } = require("../utils/resHandle");
 const { verifyJWT } = require('../utils/jwtService')
 const logger = require('../utils/logger')('isAuth')
 
+
 const isAuth = async (req, res, next) => {
   try {
     // 前端-> Authorization: Bearer xxxxxxx.yyyyyyy.zzzzzzz
@@ -25,9 +26,9 @@ const isAuth = async (req, res, next) => {
       throw customErr(401,"無效的 token","Unauthorized");
     };
   
-    // 合法token，在 req 物件加入 user 欄位
+    // 登入成功，把user物件存到req.user下
+    // 呼叫 next() 讓後續的 middleware Route 可以使用 req.user
     req.user = fetchedUser
-
     next();
   } catch (error) {
     logger.error(error.message)

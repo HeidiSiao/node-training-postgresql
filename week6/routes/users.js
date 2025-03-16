@@ -4,9 +4,11 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const { dataSource } = require("../db/data-source");
 const logger = require("../utils/logger")("User");
-const { userFieldCheck, userInfoRuleCheck, loginFieldCheck, pwdRuleCheck} = require("../utils/validUtils");
+const { userFieldCheck, loginFieldCheck,  pwdRuleCheck, nameRuleCheck } = require("../utils/validUtils");
 const { customErr, correctRes } = require("../utils/resHandle");
 const { generateJWT } = require("../utils/jwtService");
+const isAuth = require("../middlewares/isAuth");
+
 
 const saltRounds = 10;
 
@@ -23,13 +25,17 @@ router.post("/signup", async (req, res, next) => {
       throw customErr(400,`欄位未填寫正確: ${invalidMsg}`);
     }
 
-    // 驗證規則與欄位內容是否相符
-    const userInfoValidResult = userInfoRuleCheck(name, password);
-    if (userInfoValidResult.length > 0) {
-      const message = userInfoValidResult.join(" | ");
-      logger.warn(message);
-      throw customErr(400, message);
-    }
+    // 驗證密碼、姓名規則
+    const invalidName =  nameRuleCheck (name);
+    const invalidPwd = pwdRuleCheck(password);
+    const err = [];
+    if(invalidName) err.push(invalidName);
+    if(invalidPwd) err.push(invalidPwd);
+    if (err.length > 0) {
+      const errMsg = err.join("|");
+      logger.warn(`欄位未填寫正確: ${errMsg}`);
+      throw customErr(400,`欄位未填寫正確: ${errMsg}`);
+    };
 
     // email是否與查詢資料庫結果重複
     const userRepo = dataSource.getRepository("User");
@@ -121,6 +127,65 @@ router.post("/login", async (req, res, next ) => {
     next(error);
   }
 })
+
+// body內沒有物件，已存放在req.user內
+// isAuth 已經確保了 id 的有效性
+router.get("/profile", isAuth, async (req,res,next) => {
+  try {
+    const { id } = req.user;
+    const userRecord = await dataSource.getRepository("User")
+    .findOne ({
+    select: ['email','name'],
+    where: { id }
+  });
+
+  const dataRes = {
+    user: userRecord
+  }
+  correctRes(res, dataRes, 200);
+} catch(error){
+  logger.error(error);
+  next(error);
+  }
+});
+
+router.put("/profile", isAuth, async (req,res,next) => {
+  try {
+    const { id } = req.user;
+    const { name } = req.body;
+    const invalidMsg = nameRuleCheck(name);
+    if (invalidMsg) {
+      logger.warn(`欄位未填寫正確: ${invalidMsg}`);
+      throw customErr(400, `欄位未填寫正確：${invalidMsg}`);
+    };
+
+    // 檢查使用者名稱是否有修改，沒修改的話不需要更新資料庫
+    const userRepo = dataSource.getRepository("User");
+    const userRecord = await userRepo.findOneBy({ id });
+    if (userRecord.name === name ) {
+      logger.warn("使用者名稱未變更");
+      throw customErr(400, "使用者名稱未變更");
+    };
+
+    // 確認使用者有修改，資料庫進行更新
+    const updatedUser = await userRepo.update(
+    // 條件先放，再更新的欄位
+       { id }, { name }
+    );
+
+    // 資料庫是否成功更新
+    if (updatedUser.affected === 0 ) {
+      logger.warn("更新使用者失敗");
+      throw customErr(400, "更新使用者失敗");
+    };
+
+    correctRes(res);
+  } catch(error) {
+    logger.error(error);
+    next(error);
+  }
+});
+
 
 
 
