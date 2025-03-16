@@ -7,69 +7,64 @@ const logger = require("../utils/logger")("Skill");
 const { skillFieldsCheck } = require("../utils/validUtils");
 const { customErr, correctRes } = require("../utils/resHandle");
 const { isUUID } = require("validator");
+const handleErrorAsync = require ("../utils/handleErrorAsync");
 
-router.get("/", async (req, res, next) => {
-  try {
-    const skills = await dataSource.getRepository("Skill").find({
-      select: ["id", "name"],
-    });
-    // correctRes(res, skills);
-    res.status(200).json({
-      status: "success",
-      data: skills,
-    });
-  } catch (error) {
-    logger.error(error);
-    next(error);
+
+router.get("/", handleErrorAsync(async (req, res, next) => {
+  const skills = await dataSource.getRepository("Skill").find({
+    select: ["id", "name"],
+  });
+
+  const dataRes = {
+    id: skills[0],
+    name: skills[1]
+  };
+  
+  correctRes(res, dataRes);
+}));
+
+router.post("/", handleErrorAsync(async (req, res, next) => {
+  const { name } = req.body;
+  const invalidMsg = skillFieldsCheck(name);
+
+  if (invalidMsg.isInvalid) {
+    throw customErr(400, `欄位未填寫正確: ${invalidMsg.message}`);
   }
-});
 
-router.post("/", async (req, res, next) => {
-  try {
-    const { name } = req.body;
-    const invalidMsg = skillFieldsCheck(name);
-
-    if (invalidMsg.isInvalid) {
-      throw customErr(400, `欄位未填寫正確: ${invalidMsg.message}`);
-    }
-
-    const skillRepo = dataSource.getRepository("Skill");
-    const skillRecord = await skillRepo.findOne({
-      where: { name },
-    });
-    if (skillRecord) {
-      throw customErr(409,"資料重複","conflict");
-    }
-
-    const newSkill = skillRepo.create({ name });
-    const savedSkill = await skillRepo.save(newSkill);
-
-    correctRes(res, 200, savedSkill);
-  } catch (error) {
-    logger.error(error);
-    next(error);
+  const skillRepo = dataSource.getRepository("Skill");
+  const skillRecord = await skillRepo.findOne({
+    where: { name },
+  });
+  if (skillRecord) {
+    throw customErr(409,"資料重複","conflict");
   }
-});
 
-router.delete("/:skillId", async (req, res, next) => {
-  try {
-    const { skillId } = req.params;
-    if (!isUUID(skillId)) {
-      throw customErr(400, "ID錯誤");
+  const newSkill = skillRepo.create({ name });
+  const savedSkill = await skillRepo.save(newSkill);
+  const fetchSkill = await skillRepo.findOne({
+    select:["id","name"],
+    where:{
+      id: savedSkill.id
     }
-    // 無法確實刪除該筆資料 = 格式正確但 資料庫找不到該ID
-    // 或 關聯教練正在使用該項技能，所以不能被刪除 (422 業務邏輯問題？)
-    const deleteCount = await dataSource.getRepository("Skill").delete(skillId);
-    if (deleteCount.affected === 0) {
-      console.log(deleteCount);
-      throw customErr(404, "ID不存在");
-    }
+  });
 
-    correctRes(res, 200, skillId);
-  } catch (error) {
-    logger.error(error);
-    next(error);
+  correctRes(res, fetchSkill);
+}));
+
+router.delete("/:skillId", handleErrorAsync(async (req, res, next) => {
+  const { skillId } = req.params;
+  if (!isUUID(skillId)) {
+    throw customErr(400, "ID錯誤");
   }
-});
+  // 無法確實刪除該筆資料 = 格式正確但 資料庫找不到該ID
+  // 或 關聯教練正在使用該項技能，所以不能被刪除 (422 業務邏輯問題？)
+  const deleteCount = await dataSource.getRepository("Skill").delete(skillId);
+  if (deleteCount.affected === 0) {
+    console.log(deleteCount);
+    throw customErr(404, "ID不存在");
+  }
+
+  correctRes(res, skillId);
+}));
 
 module.exports = router;
