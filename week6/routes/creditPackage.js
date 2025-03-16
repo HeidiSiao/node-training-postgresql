@@ -6,6 +6,7 @@ const logger = require("../utils/logger")("CreditPackage");
 const { packageFieldsCheck } = require("../utils/validUtils");
 const { customErr, correctRes } = require("../utils/resHandle");
 const { isUUID } = require("validator");
+const isAuth = require("../middlewares/isAuth");
 const handleErrorAsync = require ("../utils/handleErrorAsync");
 
 // GET 取得購買方案列表
@@ -52,6 +53,42 @@ router.post("/", handleErrorAsync(async (req, res, next) => {
   const savedPackage = await creditPackageRepo.save(newPackage);
   correctRes(res, savedPackage);
 }));
+
+// POST 新增使用者購買方案
+router.post("/:creditPackageId",isAuth, handleErrorAsync(async(req,res,next) => {
+  // 中介層從JWT中提取並驗證使用者資訊，並存放在 req.user 中
+  // 獲取當前已驗證的使用者的 ID，確保後續操作的是該用戶自己的資料
+  const { id } = req.user;
+  // 某個特定資料的識別符
+  const { creditPackageId } = req.params;
+  const creditPackageRepo = dataSource.getRepository("CreditPackage");
+  const creditPackageRecord = await creditPackageRepo.findOne({
+    where: {
+      id: creditPackageId
+    }
+  });
+  
+  // 確認外面進來的購買方案，是否與資料庫內已存在的紀錄，為同一個id
+  if (!creditPackageRecord) {
+    logger.warn("ID錯誤");
+    throw customErr(400, "ID錯誤");
+  };
+
+  // 建立已成立的課程購買紀錄
+  const creditPurchaseRepo = dataSource.getRepository("CreditPurchase");
+  const newPurchase = creditPurchaseRepo.create({
+    user_id: id,
+    credit_package_id: creditPackageId,
+    purchased_credits: creditPackageRecord.credit_amount,
+    price_paid: creditPackageRecord.price,
+    purchaseAt: new Date().toISOString()
+  });
+  const savedPurchase = await creditPurchaseRepo.save(newPurchase);
+
+  // 資料已保存但不需要返回數據
+  correctRes(res, savedPurchase, 201);
+}));
+
 
 // DELETE 刪除購買方案
 router.delete("/:creditPackageId", handleErrorAsync(async (req, res, next) => {

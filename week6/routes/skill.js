@@ -9,7 +9,7 @@ const { customErr, correctRes } = require("../utils/resHandle");
 const { isUUID } = require("validator");
 const handleErrorAsync = require ("../utils/handleErrorAsync");
 
-
+// GET 取得教練專長列表
 router.get("/", handleErrorAsync(async (req, res, next) => {
   const skills = await dataSource.getRepository("Skill").find({
     select: ["id", "name"],
@@ -23,6 +23,7 @@ router.get("/", handleErrorAsync(async (req, res, next) => {
   correctRes(res, dataRes);
 }));
 
+// POST 新增教練專長
 router.post("/", handleErrorAsync(async (req, res, next) => {
   const { name } = req.body;
   const invalidMsg = skillFieldsCheck(name);
@@ -51,6 +52,7 @@ router.post("/", handleErrorAsync(async (req, res, next) => {
   correctRes(res, fetchSkill);
 }));
 
+// DELETE 刪除教練專長
 router.delete("/:skillId", handleErrorAsync(async (req, res, next) => {
   const { skillId } = req.params;
   if (!isUUID(skillId)) {
