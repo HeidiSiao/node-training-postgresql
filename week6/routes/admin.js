@@ -21,6 +21,7 @@ const handleErrorAsync = require ("../utils/handleErrorAsync");
 
 
 // 注意此路由要放上面，否則無法進入該路徑
+// POST 新增教練課程資料
 router.post("/coaches/courses", isAuth, isCoach, handleErrorAsync(async (req, res, next) => {
   const data = req.body;
   const {
@@ -107,6 +108,7 @@ router.post("/coaches/courses", isAuth, isCoach, handleErrorAsync(async (req, re
   correctRes(res, dataRes, 201);
 }));
 
+// PUT 編輯教練課程資料
 router.put("/coaches/courses/:courseId", isAuth, isCoach, handleErrorAsync(async (req, res, next) => {
   const { courseId } = req.params;
   const data = req.body;
@@ -186,6 +188,7 @@ router.put("/coaches/courses/:courseId", isAuth, isCoach, handleErrorAsync(async
   correctRes(res, dataRes);
 }));
 
+// POST 將使用者新增為教練
 router.post("/coaches/:userId", handleErrorAsync(async (req, res, next) => {
   // 從 url 取得的
   const { userId } = req.params;

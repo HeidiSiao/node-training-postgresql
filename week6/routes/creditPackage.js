@@ -55,6 +55,7 @@ router.post("/", handleErrorAsync(async (req, res, next) => {
 }));
 
 // POST 新增使用者購買方案
+// 登入後(isAuth)才能買其中的組合包
 router.post("/:creditPackageId",isAuth, handleErrorAsync(async(req,res,next) => {
   // 中介層從JWT中提取並驗證使用者資訊，並存放在 req.user 中
   // 獲取當前已驗證的使用者的 ID，確保後續操作的是該用戶自己的資料
@@ -85,8 +86,8 @@ router.post("/:creditPackageId",isAuth, handleErrorAsync(async(req,res,next) => 
   });
   const savedPurchase = await creditPurchaseRepo.save(newPurchase);
 
-  // 資料已保存但不需要返回數據
-  correctRes(res, savedPurchase, 201);
+  // null 表示請求成功，但不回傳不必要的資訊，符合 RESTful API 設計指南
+  correctRes(res, null, 201);
 }));
 
 
