@@ -19,9 +19,11 @@ const isAuth = async (req, res, next) => {
     const decoded = await verifyJWT(token)
     
     // 用payload中的id，在資料庫尋找對應id 
+    // decoded.id 只是從 JWT 解析出來的值，後續使用不代表此 ID 在資料庫中一定存在
     const fetchedUser = await dataSource.getRepository('User')
     .findOneBy({ id: decoded.id });
-    
+
+    // 防止已刪除或停用的帳號仍能操作
     if (!fetchedUser) {
       throw customErr(401,"無效的 token","Unauthorized");
     };

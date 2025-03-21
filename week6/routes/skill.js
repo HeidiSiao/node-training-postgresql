@@ -15,12 +15,7 @@ router.get("/", handleErrorAsync(async (req, res, next) => {
     select: ["id", "name"],
   });
 
-  const dataRes = {
-    id: skills[0],
-    name: skills[1]
-  };
-  
-  correctRes(res, dataRes);
+  correctRes(res, skills);
 }));
 
 // POST 新增教練專長

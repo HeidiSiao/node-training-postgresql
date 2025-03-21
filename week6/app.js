@@ -61,20 +61,23 @@ app.get("/healthCheck", (req, res) => {
   res.status(200).send("OK");
 });
 
-// 負責初始化資料庫連接，確保應用程式能夠與資料庫正常通訊
-const startServer = async () => {
-  try {
-    console.log("Initializing Data Source...");
-    await dataSource.initialize(); // 等待資料庫初始化
-    console.log("Data Source has been initialized!");
-  } catch (error) {
-    console.error("Error during Data Source initialization:", error);
-    process.exit(1); // 強制終止程式
-  }
-};
-startServer();
+
 
 module.exports = app;
+
+// 負責初始化資料庫連接，確保應用程式能夠與資料庫正常通訊
+// 統一由bin > www.js 集中處理
+// const startServer = async () => {
+//   try {
+//     console.log("Initializing Data Source...");
+//     await dataSource.initialize(); // 等待資料庫初始化
+//     console.log("Data Source has been initialized!");
+//   } catch (error) {
+//     console.error("Error during Data Source initialization:", error);
+//     process.exit(1); // 強制終止程式
+//   }
+// };
+// startServer();
 
 // const PORT = process.env.PORT || 3000;
 // app.listen(PORT, () => {

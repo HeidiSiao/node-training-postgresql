@@ -38,6 +38,8 @@ function onError (error) {
   }
 }
 
+// 資料庫連線失敗，強制終止 Node.js
+// 伺服器與資料庫都正常才啟動
 server.on('error', onError)
 server.listen(port, async () => {
   try {
