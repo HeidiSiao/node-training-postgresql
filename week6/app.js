@@ -11,6 +11,7 @@ const userRouter = require("./routes/users");
 const adminRouter = require("./routes/admin");
 const coachesRouter = require("./routes/coaches");
 const coursesRouter = require("./routes/courses");
+const uploadRouter = require("./routes/upload");
 const app = express();
 
 app.use(cors());
@@ -37,7 +38,7 @@ app.use("/api/users", userRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/coaches", coachesRouter);
 app.use("/api/courses", coursesRouter);
-
+app.use("/api/upload", uploadRouter);
 // Express 會自動結束請求，所以不用return 
 app.use((req, res, next)=>{
   res.status(404).json({
