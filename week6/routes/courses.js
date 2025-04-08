@@ -16,22 +16,34 @@ router.get("/", handleErrorAsync(async(req,res,next) => {
   const coursesRepo = dataSource.getRepository("Course");
   // find()方法會返回查詢結果的陣列
   // 資料庫取得包含多筆課程資料的陣列
+  // const coursesRecord = await coursesRepo.find({
+  //   select: {
+  //     id: true,
+  //     // 選擇關聯表中的 name 欄位
+  //     User: { name: true },
+  //     Skill: { name: true },
+  //     name: true,
+  //     description: true,
+  //     start_at: true,
+  //     end_at: true,
+  //     max_participants: true
+  //   },
+  //   // 直接載入整個 User 和 Skill 物件
+  //   relations: ["User", "Skill"]
+  // });
+
+
   const coursesRecord = await coursesRepo.find({
     select: {
       id: true,
-      // 選擇關聯表中的 name 欄位
-      User: { name: true },
-      Skill: { name: true },
       name: true,
       description: true,
       start_at: true,
       end_at: true,
       max_participants: true
     },
-    // 直接載入整個 User 和 Skill 物件
-    relations: ["User", "Skill"]
+    relations: ["User", "Skill"]  // 確保載入 User 和 Skill 物件
   });
-
 
   // 直接回傳一個物件 ({ ... }) 陣列(map)
   // 資料結構調整原始嵌套在 User 和 Skill 物件的紀錄
@@ -117,8 +129,8 @@ let bookingRecordCount = await bookingRepo.count({
     }
   });
 
-  // 有效課程數 超出 總購買的課程數 
-  // 有效報名人數 超出 課程報名人數門檻  
+  // 檢查用戶是否有足夠的可用堂數：有效課程數 超出 總購買的課程數 
+  // 課程的報名人數是否已滿：有效報名人數 超出 課程報名人數門檻  
   // 確保course是物件且前面已查詢過，後續才可存取course的任何欄位  
   if (userCourseCredit - userUsedCredit <= 0 ) {
     logger.warn("當前課程不足與請求衝突，無法完成操作");
@@ -130,8 +142,9 @@ let bookingRecordCount = await bookingRepo.count({
   }
   
   // 建立新的報名紀錄
+  // 建立新的報名紀錄時，將 req.user.id (即目前登入的用戶的 ID) 作為 user_id 的值傳入
   const newBooking = await bookingRepo.create({
-
+    user_id: req.user.id,
     course_id: courseId
   });
   const savedBooking = await bookingRepo.save(newBooking);
@@ -166,7 +179,7 @@ router.delete('/:courseId', isAuth, handleErrorAsync(async (req, res, next) => {
 
     if (!bookingRecord) {
       logger.warn("找不到課程ID");
-      throw customErr(404,"課程ID不存在");
+      throw customErr(404,"該用戶未報名此課程");
     };
 
    if (bookingRecord.cancelledAt !== null) {

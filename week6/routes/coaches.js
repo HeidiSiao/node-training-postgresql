@@ -72,6 +72,7 @@ router.get("/:coachId", handleErrorAsync(async(req,res,next) => {
     where:{ id: coachId },
     relations: ["User"] //自動載入與加入 user 物件
   });
+
   if(!coachRecord) {
     logger.warn("找不到該教練");
     throw customErr(404,"找不到該教練");
@@ -86,3 +87,5 @@ router.get("/:coachId", handleErrorAsync(async(req,res,next) => {
 }));
 
 module.exports = router;
+// 要新增使用者>教練角色>新增skill/教練課程>才可以查詢coaches得到coaches的id
+// coach id !== user id
